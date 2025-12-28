@@ -93,3 +93,22 @@ Responsibilities:
 - Routes to the server with the fewest active connections
 - Better for uneven response times
 - Uses in-memory connection counters
+
+## Health Checks
+
+Implemented in health/healthCheck.js.
+
+- Periodically pings backend servers
+- Marks servers as healthy / unhealthy
+- Unhealthy servers are excluded from routing
+- Failure count increases on timeout or error
+- This simulates basic failover behavior.
+
+## Rate Limiting
+
+Implemented in middleware/rateLimiter.js.
+
+- IP-based in-memory rate limiter
+- Protects the load balancer from request floods
+- Returns HTTP 429 when limit is exceeded
+- Designed as middleware-style logic for vanilla Node.js
