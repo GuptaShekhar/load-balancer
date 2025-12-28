@@ -1,27 +1,34 @@
-const httpProxy = require('http-proxy');
-
-const proxy = httpProxy.createProxyServer();
+const proxy = require('../proxy/proxy')
 
 const leastConnections = (servers, req, res) => {
-    let target = servers[0];
+    const healthy = servers.filter(server => server.healthy);
+    if (!healthy.length) {
+        res.writeHead(503);
+        return res.end('No healthy backend server found!');
+    }
+
+    let target = healthy[0];
     // using forEach will cause rece conditions as forEach is async method
-    for (const server of servers) {
+    for (const server of healthy) {
         if (server.connections < target.connections) {
             target = server;
         }
     }
     target.connections++;
+
+    const startTime = Date.now();
     console.log(`Routing to ${target.port}, active connections: ${target.connections}`);
-    
     proxy.web(req, res, { target: `http://${target.host}:${target.port}` });
 
     res.once('close', cleanUp);
+    // Prevent leaked connections
     res.once('finish', cleanUp);
-    res.once('errors', cleanUp);
 
     function cleanUp() {
+        // Prevent negative counters
         if (target.connections > 0) {
             target.connections--;
+            target.latency = Date.now() - startTime;
             console.log(`Completed ${target.port}, active: ${target.connections}`);
         }
     };
