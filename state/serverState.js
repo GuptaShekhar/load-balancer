@@ -1,4 +1,4 @@
-const serverConfig = require('./config.json').servers
+const serverConfig = require('../config.json').servers
 
 
 const servers = serverConfig.map(server => ({
